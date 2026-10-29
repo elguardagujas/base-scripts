@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import glob, os, re, subprocess, sys, requests
+import glob, os, re, subprocess, sys, requests, pathlib
 from datetime import datetime
+
+DUMPER_SCRIPT = str(pathlib.Path(__file__).resolve().parent / "gtfs_dump.py")
 
 def resolve_nap(api_url):
   key = os.environ.get("NAP_API_KEY")
@@ -38,7 +40,7 @@ def run_dump(basename, src):
   output   = f"data/{basename}_{ts}.zip"
   existing = latest_zip(basename)
 
-  cmd = [sys.executable, "tools/gtfs_dump.py", url, output]
+  cmd = [sys.executable, DUMPER_SCRIPT, url, output]
   if existing:
     cmd += ["--input", existing]
 
