@@ -4,8 +4,6 @@
 import glob, os, re, subprocess, sys, requests, pathlib
 from datetime import datetime
 
-DUMPER_SCRIPT = str(pathlib.Path(__file__).resolve().parent / "gtfs_dump.py")
-
 def resolve_nap(api_url):
   key = os.environ.get("NAP_API_KEY")
   if not key:
@@ -29,7 +27,7 @@ def latest_zip(basename):
   matches = sorted(glob.glob(f"data/{basename}_????-??-??_??-??.zip"))
   return matches[-1] if matches else None
 
-def run_dump(basename, src):
+def run_dump(basename, src, script_file):
   try:
     url = resolve(src)
   except Exception as e:
@@ -40,16 +38,17 @@ def run_dump(basename, src):
   output   = f"data/{basename}_{ts}.zip"
   existing = latest_zip(basename)
 
-  cmd = [sys.executable, DUMPER_SCRIPT, url, output]
+  script_path = str(pathlib.Path(__file__).resolve().parent / script_file)
+  cmd = [sys.executable, script_path, url, output]
   if existing:
     cmd += ["--input", existing]
 
   print(f"\n[{basename}] {existing or '(no local file)'} -> {output}")
   return subprocess.run(cmd).returncode == 0
 
-def process(SOURCES):
+def process(SOURCES, dumper="gtfs_dump.py"):
   os.makedirs("data", exist_ok=True)
-  failures = [b for b, u in SOURCES.items() if not run_dump(b, u)]
+  failures = [b for b, u in SOURCES.items() if not run_dump(b, u, dumper)]
 
   print()
   if failures:
